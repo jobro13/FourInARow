@@ -334,7 +334,8 @@ end
 function rows:PlayNetGame() 
 	self.NetGame = true 
 	self.GameServer = gameserver.new()
-	self.GameServer:Start()
+	print("Enter IP...")
+	self.GameServer:Start(io.read())
 	self.GameServer.Server:setoption("reuseaddr", true)
 	self.GameServer:AcceptConnection("Player1")
 	self.GameServer:GetClientStream("Player1")("\nWaiting for Player 2...")
