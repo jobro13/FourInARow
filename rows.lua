@@ -76,9 +76,9 @@ function rows:Write(str, player, both)
 			if self.Turn == "Player1" then o = "Player2" end 
 			game_server:GetClientStream(o)(str)
 		else 
-			print(player, "h")
+			--print(player, "h")
 			local conn = game_server:GetClientStream(player)
-			print(conn)
+			--print(conn)
 			conn(str)
 		end
 	elseif player ~= "Other" then 
@@ -173,7 +173,7 @@ function rows:PrintBoardState(addstr)
 	for x = 1, self.Collumns do 
 		self:Write((x)..delim, nil, true)
 	end 
-	self:Write(color(delim.."%{white}|\n"), nil, true)
+	self:Write(color(delim.."%{white}|\r\n"), nil, true)
 	for y=self.Rows,1,-1 do 
 		self:Write(color("%{white}|"..delim..delim), nil, true)
 		for x=1,self.Collumns do 
@@ -202,12 +202,12 @@ function rows:PrintBoardState(addstr)
 			end
 		end 
 		local out = color(delim.."%{white}|")
-		self:Write(out.."\n", nil, true)
+		self:Write(out.."\r\n", nil, true)
 	end
 	color("%{white}")
 	local lr = 5 + (self.Collumns * (1 + self.Player1:len()))
 	for i = 1, lr do self:Write("-",nil,true) end 
-	self:Write("\n", nil, true)
+	self:Write("\r\n", nil, true)
 	--os.execute("tput home")
 end
 
@@ -323,13 +323,13 @@ end
 function rows:Play() -- YEAH :D
 	self:PrintBoardState() -- visuals yay
 	while not self.Won do 
-		self:Write("Your turn! Write a collumn number to place your disk!", self.Turn)
+		self:Write("Your turn! Write a collumn number to place your disk!\r\n", self.Turn)
  
-		self:Write(self.Turn.." is placing the disk...", "Other")
+		self:Write(self.Turn.." is placing the disk...\r\n", "Other")
 
 		local finished = false
 		repeat 
-			local coll = tonumber(self:Read( self.Turn))
+			local coll = tonumber(self:Read( self.Turn), nil)
 			if not coll or coll < 1 or coll > self.Collumns then 
 				self:Write("Invalid input, try again.", self.Turn)
 			elseif coll then 
@@ -348,13 +348,15 @@ function rows:PlayNetGame()
 	self.NetGame = true 
 	self.GameServer = gameserver.new()
 	print("Enter IP...")
-	self.GameServer:Start(io.read())
+	self.GameServer:Start()
+
 	self.GameServer.Server:setoption("reuseaddr", true)
 	self.GameServer:AcceptConnection("Player1")
-	self.GameServer:GetClientStream("Player1")("\nWaiting for Player 2...")
+	self.GameServer:GetClientStream("Player1")("\r\nWaiting for Player 2...\r\n")
 	self.GameServer:AcceptConnection("Player2")
 	os.execute("sleep 1")
 	self:Play()
+	self.GameServer:Close()
 end 
 
 function rows:TraceGame() 
