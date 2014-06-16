@@ -76,6 +76,9 @@ function rows:GetState(x,y)
 end
 
 function rows:PrintBoardState()
+	function rescol()
+		color("%{reset}%{white blackbg}")
+	end
 	local delim = " " 
 	os.execute("tput clear")
 	color("%{blackbg}")
@@ -89,7 +92,7 @@ function rows:PrintBoardState()
 		color("%{white}|"..delim..delim)
 		for x=1,self.Collumns do 
 			--print(x.." "..y.." : ".. (self:GetState(x,y) or ""))
-
+			rescol()
 			local posx = self:GetState(x,y)
 
 			local attr = ""
@@ -97,12 +100,12 @@ function rows:PrintBoardState()
 				attr = "blink"
 			end
 
-			if posx == self.Player1 then 
-				color("%{"..self.Player1Color.." "..attr.."}".. posx..delim)
-			elseif posx == self.Player2 then 
-				color("%{"..self.Player2Color.." "..attr.."}"..posx..delim)
+			if posx and posx:match("[^%%]*") == self.Player1 then 
+				color("%{"..self.Player1Color.." "..attr.."}".. self.Player1 ..delim)
+			elseif posx and posx:match("[^%%]*") == self.Player2 then 
+				color("%{"..self.Player2Color.." "..attr.."}"..self.Player2..delim)
 			else 
-				io.write(string.rep(" ", self.Player1:len()) .. delim)
+				color("%{white}"..string.rep(" ", self.Player1:len()) .. delim)
 			end
 		end 
 		color(delim.."%{white}|")
@@ -131,32 +134,38 @@ function rows:checkForWin(x,y)
 		local symb = self:GetState(sx,sy)
 		local bsymb = symb -- backup symb to check
 		local tmpx, tmpy = sx,sy
+		if rs then 
+			print("CALL args: ", sx, sy, dx, dy)
+		end
 		while symb do 
+			if rs then print("LOOOP") end 
 			tmpx = tmpx + dx 
 			tmpy = tmpy + dy 
-			if not rs then 
+
 				if tmpx < 1 or tmpx > self.Collumns then 
 					symb=nil 
+					if rs then print(tmpx, 'n') end 
 				elseif tmpy < 1 or tmpy > self.Rows then 
 					symb = nil 
+					if rs then print(tmpx, 'o') end 
 				else   
-					symb = self:GetState(tmpx, tmpy) == bsymb
-				end
-			else 
-				if tmpx < 1 or tmpx > self.Collumns then 
-					symb=nil 
-				elseif tmpy < 1 or tmpy > self.Rows then 
-					symb = nil 
-				else   
-					symb = self:GetState(tmpx, tmpy) == bsymb
-					if symb then 
+					symb = self:GetState(tmpx, tmpy)
+					if rs then print(symb, 'symbchk') end 
+					symb = symb and symb:match("[^%%]*") == bsymb:match("[^%%]*")
+					if rs then print('chk', symb, bsymb) end 
+					if rs and symb then
+						print("SUB",tmpx,tmpy) 
 						self.Board[tmpx][tmpy] = bsymb.."%"
 					end
 				end
-				
-			end 
+				if rs then 
+					print('endloop;', symb, 'h')
+				end
 		end
-		
+		if rs then 
+			print("SUB",sx,sy)
+			self.Board[sx][sy] = bsymb.."%"
+		end
 		return tmpx - dx, tmpy - dy -- to fix the bound 
 	end
 
@@ -175,10 +184,9 @@ function rows:checkForWin(x,y)
 
 	-- VERTICAL
 
-	local uy = fbound(x,y,0,1)
+	local _,uy = fbound(x,y,0,1)
 	-- FIND RIGHT BOUND
-	local dy = fbound(x,y,0,-1)
-	print(uy,dy, "bound")
+	local _,dy = fbound(x,y,0,-1)
 	if math.abs(uy-dy) >= 3 then 
 		fbound(x,y,0,1,true)
 		fbound(x,y,0,-1,true)
@@ -227,10 +235,10 @@ function rows:Play() -- YEAH :D
 		print(self.Turn.."'s turn... (type a collumn number to place!)")
 		local finished = false
 		repeat 
-			local coll = io.read("*n")
-			if not coll then 
+			local coll = tonumber(io.read())
+			if not coll or coll < 1 or coll > self.Collumns then 
 				print("Invalid input, try again.")
-			else 
+			elseif coll then 
 				finished = self:Place(tonumber(coll))
 				if not finished then 
 					print("Invalid move, try again.")
@@ -238,6 +246,7 @@ function rows:Play() -- YEAH :D
 			end
 		until finished
 	end
+	self:PrintBoardState() -- to blink!!
 	print(self.PlayerWon.." has won!")
 end
 
