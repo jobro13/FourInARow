@@ -6,7 +6,7 @@ tserver.MaxClients = 2
 
 -- ET WANTS TO PHONE HOME!
 
-tserver.Port = 0
+tserver.Port = 60290
 tserver.BindAdress = "127.0.0.1" 
 tserver.Server = nil
 
@@ -19,7 +19,9 @@ function tserver:Start(server,port)
 end 
 
 function tserver:GetClientStream(client_name)
+	print(client_name)
 	if self.Connections[client_name] then 
+		print(self.Connections[client_name])
 		return function(str)
 			self.Connections[client_name]:send(str)
 		end 

@@ -16,6 +16,8 @@ rows.WinAttribute = "underline"
 rows.Turn = "Player1"
 rows.NetGame = false 
 
+rows.Minimal = false 
+
 rows.Player1Write = io.write 
 rows.Player2Write = io.write 
 
@@ -43,7 +45,9 @@ function rows:Undo() -- undo last move
 end 
 
 function rows:Initialize()
-
+	if self.Minimal then 
+		color.MinimalMode = true 
+	end 
 	self.Board = {}
 	self.Moves = {}
 	for i = 1, self.Collumns do 
@@ -72,7 +76,9 @@ function rows:Write(str, player, both)
 			if self.Turn == "Player1" then o = "Player2" end 
 			game_server:GetClientStream(o)(str)
 		else 
+			print(player, "h")
 			local conn = game_server:GetClientStream(player)
+			print(conn)
 			conn(str)
 		end
 	elseif player ~= "Other" then 
@@ -146,16 +152,23 @@ function rows:PrintBoardState(addstr)
 		end
 	end 
 
+
+
 	function rescol()
-		color("%{reset}%{white blackbg}")
+		if self.Minimal then 
+			color("%{reset}%{white blackbg}")
+		end
 	end
 	local delim = " " 
 
-
-	self:Write( string.char(27) .. "[2J", nil, true)
-	self:Write( string.char(27) .. "[;H", nil, true)
-	self:Write(color("%{blackbg}"), nil, true)
-	self:Write(color("%{white}|"..delim..delim), nil, true)
+	if not self.Minimal then 
+		self:Write( string.char(27) .. "[2J", nil, true)
+		self:Write( string.char(27) .. "[;H", nil, true)
+		self:Write(color("%{blackbg}"), nil, true)
+		self:Write(color("%{white}|"..delim..delim), nil, true)
+	else 
+		self:Write("|"..delim..delim, nil, true)
+	end
 
 	for x = 1, self.Collumns do 
 		self:Write((x)..delim, nil, true)
@@ -340,6 +353,7 @@ function rows:PlayNetGame()
 	self.GameServer:AcceptConnection("Player1")
 	self.GameServer:GetClientStream("Player1")("\nWaiting for Player 2...")
 	self.GameServer:AcceptConnection("Player2")
+	os.execute("sleep 1")
 	self:Play()
 end 
 

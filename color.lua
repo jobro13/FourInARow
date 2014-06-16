@@ -75,7 +75,14 @@ local function escapeKeys(str)
 end
 
 local function replaceCodes(str)
-  str = string.gsub(str,"(%%{(.-)})", function(_, str) return escapeKeys(str) end )
+  str = string.gsub(str,"(%%{(.-)})", function(_, str) 
+    if not color.MinimalMode then 
+        return escapeKeys(str) 
+    else
+        return ""
+    end
+
+    end )
   return str
 end
 
