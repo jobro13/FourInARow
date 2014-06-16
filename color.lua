@@ -88,6 +88,6 @@ local function ansicolors( str )
 end
 
 
-color = setmetatable({noReset = replaceCodes, reset = function() io.write( ansicolors() ) end}, {__call = function (_, str) io.write( replaceCodes (str) ) end})
+color = setmetatable({term=term, noReset = replaceCodes, reset = function() io.write( ansicolors() ) end}, {__call = function (_, str) io.write( replaceCodes (str) ) end})
 
 return color 
